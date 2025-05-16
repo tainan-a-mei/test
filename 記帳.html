@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>我們的記帳本</title>
+    <style>
+        /* ... (之前的 CSS 樣式保持不變) ... */
+    </style>
+</head>
+<body>
+    <h1>我們的記帳本</h1>
+
+    <div class="input-group">
+        <label for="type">類別:</label>
+        <select id="type">
+            <option value="income">收入</option>
+            <option value="expense">支出</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label for="description">項目:</label>
+        <input type="text" id="description">
+    </div>
+
+    <div class="input-group">
+        <label for="amount">金額:</label>
+        <input type="number" id="amount">
+    </div>
+
+    <button onclick="addTransaction()">新增</button>
+
+    <div id="balance">
+        總餘額: <span id="balance-value">0</span>
+    </div>
+
+    <div id="history">
+        <h2>交易紀錄</h2>
+        <ul id="transactions">
+            </ul>
+    </div>
+
+    <script>
+        let balance = 0;
+        let transactions = [];
+        const balanceValueElement = document.getElementById('balance-value');
+        const transactionsListElement = document.getElementById('transactions');
+        const STORAGE_KEY = 'myAccountingData'; // 定義一個儲存資料的 key
+
+        // 從 Local Storage 載入資料
+        function loadData() {
+            const storedData = localStorage.getItem(STORAGE_KEY);
+            if (storedData) {
+                const data = JSON.parse(storedData);
+                balance = data.balance;
+                transactions = data.transactions;
+                updateBalance();
+                renderTransactions();
+            }
+        }
+
+        // 將資料儲存到 Local Storage
+        function saveData() {
+            const data = {
+                balance: balance,
+                transactions: transactions
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function updateBalance() {
+            balanceValueElement.textContent = balance;
+        }
+
+        function addTransaction() {
+            const type = document.getElementById('type').value;
+            const description = document.getElementById('description').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            if (isNaN(amount)) {
+                alert('請輸入有效的金額');
+                return;
+            }
+
+            if (type === 'income') {
+                balance += amount;
+                transactions.push({ type: '收入', description: description, amount: amount });
+            } else {
+                balance -= amount;
+                transactions.push({ type: '支出', description: description, amount: -amount });
+            }
+
+            updateBalance();
+            renderTransactions();
+            clearInputFields();
+            saveData(); // 新增交易後儲存資料
+        }
+
+        function renderTransactions() {
+            transactionsListElement.innerHTML = '';
+            transactions.forEach(transaction => {
+                const listItem = document.createElement('li');
+                const sign = transaction.amount > 0 ? '+' : '';
+                const className = transaction.amount > 0 ? 'income' : 'expense';
+                listItem.textContent = `${transaction.type} - ${transaction.description}: ${sign}${transaction.amount}`;
+                listItem.classList.add(className);
+                transactionsListElement.appendChild(listItem);
+            });
+        }
+
+        function clearInputFields() {
+            document.getElementById('description').value = '';
+            document.getElementById('amount').value = '';
+        }
+
+        // 網頁載入時載入資料
+        loadData();
+    </script>
+</body>
+</html>
